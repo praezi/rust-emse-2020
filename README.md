@@ -63,7 +63,7 @@ Replace the path in [evolysis-rustcg.py](https://github.com/praezi/rust-emse-202
 
 ### On-the-fly generation and analysis
 
-Running this script will automatically create 3 PDNs (index, docs.rs, RustPräzi) and 1 CDN (RustPräzi).
+Running the [evolysis-rustcg.py](https://github.com/praezi/rust-emse-2020/blob/main/analysis/evolysis-rustcg.py) will automatically create 3 PDNs (index, docs.rs, RustPräzi) and 1 CDN (RustPräzi).
 After generation, you can run analysis such as `num_of_dependency_fns(praezi_fn_closure, "praezi")` and result will be dumped to `out/` folder.
 
 ```
@@ -78,7 +78,7 @@ python3 -i analysis/evolysis-rustcg.py 2015-08
 
 ### Static CDN
 
-The Jupyter Notebook [CDN Analysis.ipynb provide examples on how to load a CDN and perform descriptive statistics
+The Jupyter Notebook [CDN Analysis.ipynb](https://github.com/praezi/rust-emse-2020/blob/main/analysis/CDN%20Analysis.ipynb) provide examples on how to load a CDN and perform descriptive statistics
 
 
 ## Datasets
