@@ -67,4 +67,4 @@ Replace the path in [evolysis-rustcg.py](https://github.com/praezi/rust-emse-202
 ### 2020-02-14
 
 - Package-based Dependency Network: [PDN.json](https://surfdrive.surf.nl/files/index.php/s/q9TfmYVlvLpprsn)
-- Call-based Dependency Network: [CDN.json]()
+- Call-based Dependency Network: [CDN.json](https://surfdrive.surf.nl/files/index.php/s/Iq76O0Tx1iVeye0) (10 GB)
