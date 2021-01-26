@@ -435,27 +435,41 @@ def fn2pkgclosure(_closure):
     return _pkg_edges
 
 
-def num_of_deps(_closure, name):
+
+# ####
+# ###### Functions for Analysis
+# ####
+
+def num_of_dependencies(_closure, name):
+    """
+        Calculate the number of direct and transitive dependencies per package version for a resolved network
+    """
     _pd_dict_t = {}
     _pd_dict_d = {}
     
     for k,ds in _closure.items():
-        ds_t = set([t.split("::")[0] for (s,t) in ds])
-        if ds_t: 
-            _pd_dict_t[k] = len(ds_t)
         ds_d = set([t.split("::")[0] for (s,t) in ds if s == k])
         if ds_d:
             _pd_dict_d[k] = len(ds_d)
     
+        ds_all = set([t.split("::")[0] for (s,t) in ds])
+        ds_t = ds_all - ds_d
+        if ds_t: 
+            _pd_dict_t[k] = len(ds_t)
+
+    
     pd_d = pd.Series(_pd_dict_d)
     pd_t = pd.Series(_pd_dict_t) 
 
-    pd_d.to_csv("out2/{}-{}-d.csv".format(sys.argv[1],name))
-    pd_t.to_csv("out2/{}-{}-t.csv".format(sys.argv[1],name))
+    pd_d.to_csv("out/{}-{}-dep-d".format(sys.argv[1],name))
+    pd_t.to_csv("out/{}-{}-dep-t.csv".format(sys.argv[1],name))
 
-    return {"d": pd_d, "t": pd_t}
 
 def num_of_dependents(_closure,name):
+    """
+        Calculate the number of direct and transitive dependents per package version for a resolved network
+    """
+
     ## Create reverse dependency relations
     node_list = []
     edge_list = []
@@ -496,7 +510,7 @@ def num_of_dependents(_closure,name):
 
     _pd_dict_d  = {}
     _pd_dict_t = {}
-    ## num of direct dependents
+
     for n in G.nodes():
         #direct
         _pd_dict_d[G.nodes[n]['name'] + "::" + G.nodes[n]['ver']] = G.out_degree(n)
@@ -504,38 +518,121 @@ def num_of_dependents(_closure,name):
         all_nh = sum([G.number_of_edges(u,v) for (u,v) in nx.bfs_edges(G, source=n)])
         trans_nh = all_nh - G.out_degree(n) 
         _pd_dict_t[G.nodes[n]['name'] + "::" + G.nodes[n]['ver']] = trans_nh 
-        # all_nh = [z for y in G.neighbors(n) for z in G.neighbors(y)]
-        # all_nh = set(all_nh) - set([n]) - set(G.neighbors(n))
-     #   _pd_dict_t[G.nodes[n]['name'] + "::" + G.nodes[n]['ver']] = len(all_nh)
     
     pd_d = pd.Series(_pd_dict_d)
     pd_t = pd.Series(_pd_dict_t) 
 
     pd_d.to_csv("out2/{}-{}-dependents-dr.csv".format(sys.argv[1],name))
     pd_t.to_csv("out2/{}-{}-dependents-tr.csv".format(sys.argv[1],name))    
+
+
+def num_of_dependency_fns(_fn_closure, name):
+    """
+        Calculate the number of direct and transitive calls to dependencies per package version
+    """
+
+    def helper(head, pkg_graph):
+        for n in pkg_graph.nodes():
+            if n == head:
+                dir_dep_calls = pkg_graph.out_degree(n)
+                all_dep_calls = len(pkg_graph.edges())
+                transitive_dep_calls = all_dep_calls - dir_dep_calls #remove direct calls
+                return {"d": dir_dep_calls, "t": transitive_dep_calls}
+            else:
+                continue
+
+    _pkg_graph = {}
+
+    for k,fns in _fn_closure.items():
+        G = nx.MultiDiGraph()
+        unique_edges = set([(src_krate, s_fn, "{}::{}".format(d_name,d_ver), t_fn) for (src_krate, s_fn, d_name, d_ver, t_fn, t_dispatch) in fns])
+        for (src_krate,_,dst_krate, _) in unique_edges: 
+            G.add_edge(src_krate, dst_krate)
+        _pkg_graph[k] = G
     
-def num_of_depfns(_fn_closure, name):
     _pd_dict_t = {}
     _pd_dict_d = {}
     
-    for k,fns in _fn_closure.items():
-        ds_t = set([t_fn for (src_krate, s_fn, d_name, d_ver, t_fn, t_dispatch) in fns])
-        if ds_t: 
-            _pd_dict_t[k] = len(ds_t)
-        ds_d = set([t_fn for (src_krate, s_fn, d_name, d_ver, t_fn, t_dispatch) in fns if src_krate == k])
-        if ds_d:
-            _pd_dict_d[k] = len(ds_d)
-    
+    for (k, graph) in _pkg_graph.items():
+        ds = helper(k, graph)
+        _pd_dict_t[k] = ds['t']
+        _pd_dict_d[k] = ds['d']
+
     pd_d = pd.Series(_pd_dict_d)
     pd_t = pd.Series(_pd_dict_t) 
 
-    pd_d.to_csv("out2/{}-{}-fn-d.csv".format(sys.argv[1],name))
-    pd_t.to_csv("out2/{}-{}-fn-t.csv".format(sys.argv[1],name))
+def num_of_dependents_fns(_fn_closure, name):
+    """
+        Calculate the number of direct and transitive calls to dependents per package version
+    """
+    def dependents(pkg_graph):
+        reverse = pkg_graph.reverse(copy=True)
+        measured = []
+        for n in reverse:
+            dir_dep_calls = reverse.out_degree(n)
+            all_dep_calls = sum([reverse.number_of_edges(u,v) for (u,v) in nx.bfs_edges(reverse, source=n)])
+            trans_dep_calls = all_dep_calls - dir_dep_calls
+            measured.append((n, dir_dep_calls, trans_dep_calls))
+        return measured
+        
+    _pkg_graph = {}
 
-    return {"d": pd_d, "t": pd_t}
+    for k,fns in _fn_closure.items():
+
+        G = nx.MultiDiGraph()
+        
+        unique_edges = set([(src_krate, s_fn, "{}::{}".format(d_name,d_ver), t_fn) for (src_krate, s_fn, d_name, d_ver, t_fn, t_dispatch) in fns])
+        for (src_krate,_,dst_krate, _) in unique_edges: 
+            G.add_edge(src_krate, dst_krate)
+        
+        _pkg_graph[k] = G
+    
+    _pd_dict_d = {}
+    _pd_dict_t = {}
+
+    for (k, graph) in _pkg_graph.items():
+        for (pkg_ver, direct_calls, transitive_calls) in num_of_dependents(graph):
+    
+            if pkg_ver not in _pd_dict_d:
+                _pd_dict_d[pkg_ver] = list()
+            
+            if pkg_ver not in _pd_dict_t:
+                _pd_dict_t[pkg_ver] = list()
+            
+            _pd_dict_d[pkg_ver].append(direct_calls)
+            _pd_dict_t[pkg_ver].append(transitive_calls)
+    
+    for (k, vs) in _pd_dict_d.items():
+        _pd_dict_d[k] = sum(vs)
+
+    for (k, vs) in _pd_dict_t.items():
+        _pd_dict_t[k] = sum(vs)
 
 
-def overlapping_depfn(_fn_closure, name):
+    pd_d = pd.Series(_pd_dict_d)
+    pd_t = pd.Series(_pd_dict_t) 
+
+    pd_d.to_csv("out/{}-{}-dependents-fn-d.csv".format(sys.argv[1],name))
+    pd_t.to_csv("out/{}-{}-dependents-fn-t.csv".format(sys.argv[1],name))
+
+def num_of_overlap(_closure,name):
+    """
+        Calculate the number of overlapping packages in a dependency tree
+    """
+    _pd_dict_overlap = {}
+    
+    for k,ds in _closure.items():
+        ds = [t.split("::")[0] for (s,t) in ds]
+        _pd_dict_overlap[k] = len([d for d, count in collections.Counter(ds).items() if count > 1]) 
+
+    pd = pd.Series(_pd_dict_overlap)
+    pd.to_csv("out/{}-{}-package-overlap.csv".format(sys.argv[1],name))
+
+
+def num_of_overlap_depfn(_fn_closure, name):
+    """
+        Calculate the number of overlapping functions in a dependency tree
+    """
     _dict_overlap = {}
     for k,fns in _fn_closure.items():
         visited = set()
@@ -550,22 +647,124 @@ def overlapping_depfn(_fn_closure, name):
         _dict_overlap[k] = len([fn for fn, count in collections.Counter(selected).items() if count > 1])
     
     pd_d = pd.Series(_dict_overlap)
-    pd_d.to_csv("out2/{}-{}-overlap-fn.csv".format(sys.argv[1],name))
+    pd_d.to_csv("out/{}-{}-overlap-fn.csv".format(sys.argv[1],name))
+
+def percentage_bloat_fns(_fn_closure, name):
+    """
+        Percentage of function bloat in a dependency treee
+    """
+    _cache = {}
+    def get_public_fns(krate):
+        if krate in _cache:
+            return _cache[krate]
+        p,v= krate.split("::")
+        folder = "/datasets/praezi/stitching/{}/{}".format(p,v)
+        fns = set()
+        for _file in os.listdir(folder):
+            if fnmatch.fnmatch(_file, 'entrypoints-*.txt'):
+                fns = fns.union(set([line.rstrip('\n') for line in open("{}/{}".format(folder,_file))]))
+        fns = [base64.b64decode(fn.encode('ascii')).decode('ascii') for fn in fns]
+        fns = ["{}::{}".format(p,fn) for fn in fns]
+        _cache[krate] = fns
+        return fns
+
+    _pd_dict_full = {}
+    _pd_dict_set = {}
+
+    for p, edges in _fn_closure.items():
+        fns = []
+        visited = set()
+        for (s,t) in edges:
+            if s not in visited:
+                visited.add(s)
+                fns = fns + get_public_fns(s)
+            if t not in visited:
+                visited.add(t)
+                fns = fns + get_public_fns(t)
+        if len(fns) > 0:
+            _pd_dict_full[p] = len(fns)
+            _pd_dict_set[p] = len(set(fns))
     
-    return pd_d
+    df_full = pd.Series(_pd_dict_full,name="full")
+    df_set = pd.Series(_pd_dict_set,name="unique")
+    df = pd.concat([df_full, df_set],axis=1)
+    df['ratio'] = 1 - (df['unique'] / df['full'])
+    df.to_csv("out/bloat/{}-{}-pub-fn-bloat.csv".format(sys.argv[1],name))
 
 
-def num_of_overlap(_closure,name):
-    _pd_dict_overlap = {}
-    
-    for k,ds in _closure.items():
-        ds = [t.split("::")[0] for (s,t) in ds]
-        _pd_dict_overlap[k] = len([d for d, count in collections.Counter(ds).items() if count > 1]) 
+def percentage_package_reach(_closure,name):
+    """
+        Calculate the local reaching centrality for each package in the network
+    """
+    G = nx.DiGraph()
 
-    pd_d = pd.Series(_pd_dict_overlap)
-    pd_d.to_csv("out2/{}-{}-overlap.csv".format(sys.argv[1],name))
+    for _,ds in _closure.items():
+        for (s,t) in ds:
+            G.add_edge(t,s)
 
-    return pd_d
+    _centrality = {}
+
+    for n in G.nodes():
+        _centrality[n] = nx.local_reaching_centrality(G,n)
+
+    pdc = pd.Series(_centrality)
+    pdc.to_csv("out/centrality/{}-{}-local-reach.csv".format(sys.argv[1],name))
+
+def num_fn_reach_package(_fn_closure, name, pkgs = []):
+    """
+        Given a set of packages, look up functions in these packages and the calculate their reach in the CDN
+    """
+    G = nx.DiGraph()
+    _id = 0
+    _node_id = {}
+    edges = [] 
+    for _, fns in _fn_closure.items():
+        for (src_krate, s_fn, d_name, d_ver, t_fn, t_dispatch) in fns:
+            key_src = src_krate + s_fn 
+            key_dst = d_name + "::" + d_ver + t_fn
+            edges.append((key_src,key_dst))
+            if key_src not in _node_id:
+                _node_id[key_src]  = _id
+                _id+=1
+            G.add_node(_node_id[key_src],krate=src_krate, fn=s_fn)
+            if key_dst not in _node_id:
+                _node_id[key_dst]  = _id
+                _id+=1
+            
+            G.add_node(_node_id[key_dst],krate=d_name + "::" + d_ver, fn=t_fn)
+            G.add_edge(_node_id[key_dst],_node_id[key_src])
+
+    # Find all functions from the provided package(s)
+    search_terms = pkgs 
+    search_nodes = []
+    for term in search_terms:
+        search_nodes = search_nodes + [(n,d) for n,d in G.nodes(data=True) if d['krate']==term]
+
+
+    def find_all(G,n):
+        visited = set()
+        visited.add(n)
+        worklist = list(G.neighbors(n))
+
+        while worklist:
+            w = worklist.pop()
+            if w in visited:
+                continue
+            visited.add(w)
+            worklist = worklist + list(G.neighbors(w))
+        
+        return list(set(visited) - set([n]))
+
+
+    lines = []
+    lines.append("package,fn,reach")
+    for n,d in search_nodes:
+        all_fn = find_all(G,n)
+        all_pkg = set([G.nodes[_fn]['krate'] for _fn in all_fn])
+        lines.append("{},{},{}".format(d['krate'],base64.b64decode(d['fn'].encode('ascii')).decode('ascii'),len(all_pkg)))
+
+    with open("out/centrality/{}-{}-fn-reach.csv".format(sys.argv[1],name), "w") as outfile:
+        outfile.writelines(s + '\n' for s in lines)
 
 # ####
 # ###### Create Networks 
@@ -578,3 +777,10 @@ docsrs_closure = dep_closure(_docsrs_snapshot,_dependencies,_features)
 # Calculate Dependency Closure (function level)
 praezi_fn_closure = dep_fn_closure(_praezi_snapshot,_dependencies,_features)
 praezi_pkg_closure = fn2pkgclosure(praezi_fn_closure)
+
+# ####
+# ###### RUN ANALYSIS....
+# #####
+
+# Example: num_of_dependency_fns(praezi_fn_closure, "praezi")
+
