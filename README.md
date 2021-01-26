@@ -30,7 +30,7 @@ There are two options for generating a CDN:
 ./api-pair-extract/run.sh
 ```
 
-## Analysis
+## Working with Call-based Dependency Networks
 
 ### Installation Prerequisites
 
@@ -76,7 +76,7 @@ Example
 python3 -i analysis/evolysis-rustcg.py 2015-08
 ```
 
-### Static CDN
+### Analysis on a Static CDN
 
 The Jupyter Notebook [CDN Analysis.ipynb](https://github.com/praezi/rust-emse-2020/blob/main/analysis/CDN%20Analysis.ipynb) provide examples on how to load a CDN and perform descriptive statistics
 
