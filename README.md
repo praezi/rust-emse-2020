@@ -7,16 +7,16 @@ The replication package containts:
 - Links to datasets 
 
 
+## Generating CDNs using [rust-callgraphs](https://github.com/ktrianta/rust-callgraphs) constructed call graphs
+There are two options for generating a CDN:
 
-## Process Call Graphs for CDN generation
-There are two options for generating a CDN, the first being a statically
-generated CDN using the resolved versions available in the call graph, and the
-second, annotes call graphs further for dynamically-created CDNs.
+1. Static CDN: one-time generation that uses the resolved dependency versions available in the call graphs. 
+2. Dynamic CDN: on-the-fly generation based on user-provided timestamps. Constructs API-mappings based on entry and exit points of packages.
 
 
 ### Generate a one-time static CDN
 
-``` sh
+``` bash
 # Annontate and prune (i.e., remove std calls) call graphs 
 ./ufify/run.sh
 
@@ -26,11 +26,41 @@ second, annotes call graphs further for dynamically-created CDNs.
 ```
 ### Preperation for dynamic CDNs
 
-``` sh
+``` bash
 ./api-pair-extract/run.sh
 ```
 
-## Running Analysis Scripts
+## Analysis
+
+### Installation Prerequisites
+
+#### Dependencies 
+
+- [Rust toolchain](https://rustup.rs)
+- Python 3
+- [pandas](https://pandas.pydata.org)
+- [numpy](https://numpy.org)
+- [networkx](https://networkx.org) 
+
+#### Python bindings to Rust's [semver](https://crates.io/crates/semver) library
+
+1. Generate an FFI-compatible C-ABI library in Rust
+
+``` bash
+cd bindings
+cargo build --release
+```
+
+2. Replace lookup path to the library
+
+After compilation, a generated library (`libsemver_ffi.so`) should be available under the `target` folder:
+
+```
+target/release/libsemver_ffi.so
+```
+
+Replace the path in [evolysis-rustcg.py](https://github.com/praezi/rust-emse-2020/blob/main/analysis/evolysis-rustcg.py#L52) to match your absolute path.
+
 
 ## Datasets
 
