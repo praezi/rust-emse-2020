@@ -1,6 +1,6 @@
 # Präzi: From Package-based to Call-based Dependency Networks
 
-The replication package containts:
+The replication package contains:
 
 - Scripts for generating call-based dependency networks
 - Scraper for mining toolchain & build status on [Docs.rs](https://docs.rs) 
@@ -11,7 +11,7 @@ The replication package containts:
 ## Generating CDNs using [rust-callgraphs](https://github.com/ktrianta/rust-callgraphs) constructed call graphs
 There are two options for generating a CDN:
 
-1. Static CDN: one-time generation that uses the resolved dependency versions available in the call graphs. 
+1. Static CDN: a one-time generation that uses the resolved dependency versions available in the call graphs. 
 2. Dynamic CDN: on-the-fly generation based on user-provided timestamps. Constructs API-mappings based on entry and exit points of packages.
 
 
@@ -79,7 +79,7 @@ python3 -i analysis/evolysis-rustcg.py 2015-08
 
 ### Analysis on a Static CDN
 
-The Jupyter Notebook [CDN Analysis.ipynb](https://github.com/praezi/rust-emse-2020/blob/main/analysis/CDN%20Analysis.ipynb) provide examples on how to load a CDN and perform descriptive statistics
+The Jupyter Notebook [CDN Analysis.ipynb](https://github.com/praezi/rust-emse-2020/blob/main/analysis/CDN%20Analysis.ipynb) provide examples of how to load a CDN and perform descriptive statistics
 
 
 ## Datasets
