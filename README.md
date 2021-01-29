@@ -1,4 +1,7 @@
 # Präzi: From Package-based to Call-based Dependency Networks
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4478981.svg)](https://doi.org/10.5281/zenodo.4478981)
+[![arXiv](https://img.shields.io/badge/arXiv-2101.56789-09563.svg)](https://arxiv.org/abs/2101.09563)
+
 
 The replication package contains:
 
@@ -83,8 +86,4 @@ The Jupyter Notebook [CDN Analysis.ipynb](https://github.com/praezi/rust-emse-20
 
 
 ## Datasets
-
-### 2020-02-14
-
-- Package-based Dependency Network: [PDN.json](https://surfdrive.surf.nl/files/index.php/s/q9TfmYVlvLpprsn)
-- Call-based Dependency Network: [CDN.json](https://surfdrive.surf.nl/files/index.php/s/Iq76O0Tx1iVeye0) (10 GB)
+The call graph corpus and a statically generated CDN is available at [Zenodo](https://doi.org/10.5281/zenodo.4478981) for download.
