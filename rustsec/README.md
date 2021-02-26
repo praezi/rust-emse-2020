@@ -16,3 +16,9 @@ python3 extract-rustcg.py <path>
 python3 merge-rustcg.py <path>
 python3 test-rustcg.py <path>
 ```
+
+## How did we split package-dependency call graphs?
+
+<img width="440" alt="Screenshot 2021-02-26 at 16 52 13" src="https://user-images.githubusercontent.com/2521475/109322844-0ff0f380-7853-11eb-8041-b105d6fcfc83.png">
+
+The figure above illustrates three types of function calls: two cross-package calls and one internal function call.
