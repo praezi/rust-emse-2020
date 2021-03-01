@@ -247,7 +247,7 @@ Simple name of the type without relative path information.
 A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
 
 ##### `"package_version"`
-A valid release on [crates.io](https://crates.io). If there is a `null` value present, the custom type information needs to be replaced by a one from a resolved version. Follow the steps [here](rustsec/README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
+A valid release on [crates.io](https://crates.io). If there is a `null` value present, the custom type information needs to be replaced by a one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
 
 ##### `"relative_def_id"`
 A relative or logical path leading to declared `Struct`. If there is a `null` value, it is not a custom type but a primitive or generic type. 
@@ -306,7 +306,7 @@ A unique identifier of the item within the file. We use the `id` to reference th
 A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
 
 ##### `"package_version"`
-A valid release on [crates.io](https://crates.io). If there is a `null` value present, the trait needs to be replaced by a one from a resolved version. Follow the steps [here](rustsec/README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
+A valid release on [crates.io](https://crates.io). If there is a `null` value present, the trait needs to be replaced by a one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
 
 ##### `"relative_def_id"`
 A relative or logical path leading to declared `Trait`.
