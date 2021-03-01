@@ -198,7 +198,6 @@ If an edge is statically or dynamically dispatched. If `true`, a statically disp
 If an edge is resolved or unresolved. If `false`, the edge is unresolved and either the item in the `src_id` or `dst_id` needs to be replaced or linked to a function in another package. 
 
 
-
 ### The `type_hierarchy.json` file
 File containing information on structs, traits, and trait implementations of a crate.
 
@@ -226,7 +225,7 @@ A list of [Traits](https://doc.rust-lang.org/rust-by-example/trait.html).
 A list of Trait Implementations.
 
 ### Data Type - Format
-A data type can be a custom type, primitive, or a generic and are specified using the following format:
+A data type can be a custom type, primitive, or generic and are specified using the following format:
 
 ``` json
 {
@@ -238,7 +237,7 @@ A data type can be a custom type, primitive, or a generic and are specified usin
 }
 ```
 ##### `"id"`
-A unique identifier of the item within the file. We use the `id` to reference the source and target of function calls.
+A unique identifier of the item within the file. 
 
 ##### `"string_id"`
 Simple name of the type without relative path information.
@@ -247,7 +246,7 @@ Simple name of the type without relative path information.
 A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
 
 ##### `"package_version"`
-A valid release on [crates.io](https://crates.io). If there is a `null` value present, the custom type information needs to be replaced by a one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
+A valid release on [crates.io](https://crates.io). If there is a `null` value present, the custom type information needs to be replaced by one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
 
 ##### `"relative_def_id"`
 A relative or logical path leading to declared `Struct`. If there is a `null` value, it is not a custom type but a primitive or generic type. 
@@ -281,13 +280,13 @@ In the [wayland-client v0.25.0](https://lima.ewi.tudelft.nl/cratesio/wayland-cli
   "relative_def_id": "wayland_client::imp[0]::Dispatcher[0]"
 }
 ```
-The `string_id` indicatas the name as `dyn Dispatcher`.
+The `string_id` indicates the name as `dyn Dispatcher`.
 
 **Q: Why could I not find type information from a `relative_def_id`?**
 
-- The function is part of a module and do not belong to a particular `Struct`.
+- The function is part of a module and does not belong to a particular `Struct`.
 - The function is an `unsafe` function that links to a function in a C library.
-- Missing information from the rust std crates (if you are trying look up something that belongs to `rustc`)
+- Missing information from the rust std crates (if you are trying to look up something that belongs to `rustc`)
 
 ### Trait - Format
 
@@ -300,16 +299,94 @@ The `string_id` indicatas the name as `dyn Dispatcher`.
 }
 ```
 ##### `"id"`
-A unique identifier of the item within the file. We use the `id` to reference the source and target of function calls.
+A unique identifier of the item within the file. 
 
 ##### `"package_name"`
 A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
 
 ##### `"package_version"`
-A valid release on [crates.io](https://crates.io). If there is a `null` value present, the trait needs to be replaced by a one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
+A valid release on [crates.io](https://crates.io). If there is a `null` value present, the trait needs to be replaced by one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
 
 ##### `"relative_def_id"`
 A relative or logical path leading to declared `Trait`.
 
+### Impl - Format
 
+``` json
+{
+  "id": Int,
+  "type_id": Int,
+  "trait_id": Int,
+  "package_name": String,
+  "package_version": String,
+  "relative_def_id": String
+}
 
+```
+##### `"id"`
+A unique identifier of the item within the file. 
+
+##### `"type_id"`
+`id` reference to the type in `types: []`.
+
+##### `"trait_id"`
+`id` reference to the type in `traits: []`. 
+
+##### `"package_name"`
+A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
+
+##### `"package_version"`
+A valid release on [crates.io](https://crates.io). If there is a `null` value present, the trait needs to be replaced by one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
+
+##### `"relative_def_id"`
+A relative or logical path leading to declared `Trait`.
+
+### Impl - How to findout if a function in `callgraph.json` is an implementation of a Trait function?
+
+1. Needs to have an `{{impl}}` in the `relative_def_id` path such as the following example:
+
+``` json
+{
+  "id": 22,
+  "package_name": "wayland-commons",
+  "package_version": "0.23.4",
+  "crate_name": "wayland_commons",
+  "relative_def_id": "wayland_commons::map[0]::{{impl}}[1]::is_interface[0]",
+  "is_externally_visible": true,
+  "num_lines": 4,
+  "source_location": "src/map.rs:69:5: 72:6"
+}
+```
+2. Split the the `relative_def_id` at the right-most `{{impl}}` portion. 
+Sometimes there are several `{{impl}}` in one `relative_def_id`, you have to split at the right-most one and use left split to query in `impls`. For example:
+
+`wayland_commons::map[0]::{{impl}}[1]::is_interface[0] --> wayland_commons::map[0]::{{impl}}[1]` 
+
+3. Retrieve the implementation in the `impls` section of the `type_hierarchy.json` file. Example:
+
+```json
+{
+  "id": 199,
+  "type_id": 73,
+  "trait_id": null,
+  "package_name": "wayland-commons",
+  "package_version": "0.23.4",
+  "relative_def_id": "wayland_commons::map[0]::{{impl}}[1]"
+}
+```
+
+Here, we find that the `trait_id` is `null`. In other cases, the `type_id` can also be `null`. Due to type generics, we are unable to resolve information correctly.
+
+4. From the retrieved item, we can lookup it's Struct and Trait. 
+
+Looking up the `type_id`, we find the name of this Struct is [`Object`](https://docs.rs/wayland-commons/0.23.4/wayland_commons/map/struct.Object.html).
+
+```json
+{
+  "id": 73,
+  "string_id": "Object",
+  "package_name": "wayland-commons",
+  "package_version": "0.23.4",
+  "relative_def_id": "wayland_commons::map[0]::Object[0]"
+}
+```
