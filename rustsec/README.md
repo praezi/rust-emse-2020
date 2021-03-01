@@ -200,6 +200,7 @@ If an edge is resolved or unresolved. If `false`, the edge is unresolved and eit
 
 
 ### The `type_hierarchy.json` file
+File containing information on structs, traits, and trait implementations of a crate.
 
 #### Structure
 
@@ -211,3 +212,84 @@ If an edge is resolved or unresolved. If `false`, the edge is unresolved and eit
 }
 
 ```
+
+##### `"types": []`
+A list of data types. A type is:
+  - Custom types (i.e., [`Struct`](https://doc.rust-lang.org/rust-by-example/custom_types/structs.html))
+  - [Primitives](https://doc.rust-lang.org/rust-by-example/primitives.html)
+  - Generics 
+
+##### `"traits": []`
+A list of [Traits](https://doc.rust-lang.org/rust-by-example/trait.html).
+
+##### `"impls": []`
+A list of Trait Implementations.
+
+### Data Type - Format
+A data type can be a custom type, primitive, or a generic and are specified using the following format:
+
+``` json
+{
+  "id": Int,
+  "string_id": String,
+  "package_name": String,
+  "package_version": String,
+  "relative_def_id": String
+}
+```
+##### `"id"`
+A unique identifier of the item within the file. We use the `id` to reference the source and target of function calls.
+
+##### `"string_id"`
+Simple name of the type without relative path information.
+
+##### `"package_name"`
+A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
+
+##### `"package_version"`
+A valid release on [crates.io](https://crates.io). If there is a `null` value present, the custom type information needs to be replaced by a one from a resolved version. Follow the steps [here]()
+
+##### `"relative_def_id"`
+A relative or logical path leading to declared `Struct`. If there is a `null` value, it is not a custom type but a primitive or generic type. 
+
+### Data Type - Lookup up a type using a relative_def_id from a CG Node.
+
+In the [wayland-client v0.25.0](https://lima.ewi.tudelft.nl/cratesio/wayland-client/0.25.0/callgraph.json) callgraph, we have the following function we would like to look up the type information for:
+
+```json
+{
+  "id": 2537,
+  "package_name": "wayland-client",
+  "package_version": "0.25.0",
+  "crate_name": "wayland_client",
+  "relative_def_id": "wayland_client::imp[0]::Dispatcher[0]::dispatch[0]",
+  "is_externally_visible": true,
+  "num_lines": 0,
+  "source_location": null
+}
+```
+1. Remove the function-portion of the `relative_def_id`. Example: `wayland_client::imp[0]::Dispatcher[0]`
+2. Query under `types` section in the `type_hierarchy.json` file.
+3. If a match, we retrieve the following item:
+
+``` json
+{
+  "id": 74,
+  "string_id": "dyn Dispatcher",
+  "package_name": "wayland-client",
+  "package_version": "0.25.0",
+  "relative_def_id": "wayland_client::imp[0]::Dispatcher[0]"
+}
+```
+The `string_id` indicatas the name as `dyn Dispatcher`.
+
+**Q: Why could I not find type information from a `relative_def_id`?**
+
+- The function is part of a module and do not belong to a `Struct`.
+- The function is an `unsafe` function that links to a function in a C library.
+- Missing information from the rust std crates (if you are trying look up something that belongs to `rustc`)
+
+
+
+
+
