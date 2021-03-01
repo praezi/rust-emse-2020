@@ -46,14 +46,14 @@ A call graph node is either a `function` or a `macro` item. The common format is
 
 ``` json
 {
-  "id": Int,
-  "package_name": String,
-  "package_version": String,
-  "crate_name": String,
-  "relative_def_id": String,
-  "is_externally_visible": Bool,
-  "num_lines": Int,
-  "source_location": String,
+  "id": "Int",
+  "package_name": "String",
+  "package_version": "String",
+  "crate_name": "String",
+  "relative_def_id": "String",
+  "is_externally_visible": "Bool",
+  "num_lines": "Int",
+  "source_location": "String",
 }
 ```
 
@@ -176,11 +176,11 @@ A CG edge is a list adhering the following format:
 
 ``` json
 "function_calls": [
-  ["src_id", "dst_id", Bool(1), Bool(2)]
+  ["src_id", "dst_id", "Bool(1)", "Bool(2)"]
 ],
 
 "macro_calls": [
-  ["src_id", "dst_id", Bool(2)]
+  ["src_id", "dst_id", "Bool(2)"]
 ]
 ```
 
@@ -192,10 +192,10 @@ the `id` of the caller function.
 ##### `"dst_id"`
 the `id` of the callee function.
 
-##### `Bool(1)`
+##### `"Bool(1)"`
 If an edge is statically or dynamically dispatched. If `true`, a statically dispatched call. If `false`, dynamically dispatched call.
 
-##### `Bool(2)`
+##### `"Bool(2)"`
 If an edge is resolved or unresolved. If `false`, the edge is unresolved and either the item in the `src_id` or `dst_id` needs to be replaced or linked to a function/macro in another crate. 
 
 
@@ -230,11 +230,11 @@ A data type can be a custom type, primitive, or generic, and are specified using
 
 ``` json
 {
-  "id": Int,
-  "string_id": String,
-  "package_name": String,
-  "package_version": String,
-  "relative_def_id": String
+  "id": "Int",
+  "string_id": "String",
+  "package_name": "String",
+  "package_version": "String",
+  "relative_def_id": "String",
 }
 ```
 ##### `"id"`
@@ -293,10 +293,10 @@ The `string_id` indicates the name as `dyn Dispatcher`.
 
 ``` json
 {
-  "id": Int,
-  "package_name": String,
-  "package_version": String,
-  "relative_def_id": String
+  "id": "Int",
+  "package_name": "String",
+  "package_version": "String",
+  "relative_def_id": "String",
 }
 ```
 ##### `"id"`
@@ -315,12 +315,12 @@ A relative or logical path leading to declared `Trait`.
 
 ``` json
 {
-  "id": Int,
-  "type_id": Int,
-  "trait_id": Int,
-  "package_name": String,
-  "package_version": String,
-  "relative_def_id": String
+  "id": "Int",
+  "type_id": "Int",
+  "trait_id": "Int",
+  "package_name": "String",
+  "package_version": "String",
+  "relative_def_id": "String",
 }
 
 ```
