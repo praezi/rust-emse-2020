@@ -110,8 +110,3 @@ to
 ]
 ```
 Here, `true` in the last list element implies that the edge is concrete and resolved. 
-
-## Anatomy of a `callgraph.json`
-
-
-## Anatomy of a `type_hierarchy.json`
