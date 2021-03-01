@@ -168,7 +168,7 @@ We will reuse the placeholder example to illustrate the process:
 
 **Q: What if there are more matches for `relative_def_id`?**
 
-There are two possibilties. Due to the non-normalization of `source_location`, it is possible that we have duplicates of the same function or macro. You can verify this by comparing the `source_location` between the matches. In the other case, there are several anonymous functions with identical relative paths. They can be distingushed by comparing the `source_location` field. 
+There are two possibilities. Due to the non-normalization of `source_location`, we may have duplicates of the same function or macro. You can verify this by comparing the `source_location` between the matches. In the other case, there are several anonymous functions with identical relative paths. They can be distinguished by comparing the `source_location` field. 
 
 ### CG Edge
 A CG edge is a list adhering the following format:
