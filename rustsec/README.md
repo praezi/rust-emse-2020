@@ -1,5 +1,5 @@
 ## Getting started
-We have opened a [public endpoint](https://lima.ewi.tudelft.nl/cratesio) serving call graphs of crates available from [crates.io](https://crates/io). The available call graphs date back to February 2020; newer versions are currently not available. Below, we provide initial documentation on the data, its format, and how to use the accompanying type information with a call graph.
+We have opened a [public endpoint](https://lima.ewi.tudelft.nl/cratesio) serving call graphs of crates from [crates.io](https://crates/io). The available call graphs date back to February 2020; newer versions are currently not available. Below, we provide initial documentation on the data, its format, and how to use the accompanying type information with a call graph.
 
 The call graphs were produced using [ktrianta/rust-callgraphs](https://github.com/ktrianta/rust-callgraphs).
 
@@ -21,28 +21,28 @@ File containing a call graph of a crate version including edges to cross-package
 
 ##### `"functions": []`
 A list of functions. A function is:
-  - concrete function belonging to the package.
-  - placeholder function that needs to be resolved to a concrete function in another package.
+  - declared or generated function belonging to the package.
+  - placeholder function that needs to be resolved to a declared or generated function in another crate.
   - function in `rustc` (e.g., `core`, `alloc`, or `std`)
 
 ##### `"macros": []`
 A list of macros. A macro is:
-  - a defined macro belonging to the package.
-  - placeholder macro that needs to be resolved to a concrete macro in another package.
-  - macro in `rustc` (e.g., `core`, `alloc`, or `std`)
+  - a defined macro belonging to the crate.
+  - placeholder macro that needs to be resolved to a declared macro in another crate.
+  - macro from `rustc` (e.g., `core`, `alloc`, or `std`)
 
 
 
 ##### `"function_calls": []`
-A list of calls between function entities. A call is _statically_ or _dynamically_ dispatched, and _resolved_ or _unresolved_. A call that is _unresolved_ indicates that it is dependent on a function from an external package.
+A list of calls between functions. A call is _statically_ or _dynamically_ dispatched, and _resolved_ or _unresolved_. A call that is _unresolved_ indicates that it is dependent on a function from an external crate.
 
 
 
 ##### `"macro_calls": []`
-A list of macro invocations. A call is _resolved_ or _unresolved_. A call that is _unresolved_ indicates that it is dependent on a macro from an external package.
+A list of macro invocations. A call is _resolved_ or _unresolved_. A call that is _unresolved_ indicates that it is dependent on a macro from an external crate.
 
 ### CG Node - Format
-A call graph node is either a `function` and `macro` item. The common format is the following:
+A call graph node is either a `function` or a `macro` item. The common format is the following:
 
 ``` json
 {
@@ -61,31 +61,32 @@ A call graph node is either a `function` and `macro` item. The common format is 
 A unique identifier of the item within the file. We use the `id` to reference the source and target of function calls.
 
 ##### `"package_name"`
-A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the function or macro belongs to a standard crate of `rustc`.
+A name of the crate on [crates.io](https://crates.io). If there is a `null` value, the function or macro belongs to a standard crate of `rustc`.
 
 ##### `"package_version"`
-A valid release on [crates.io](https://crates.io). If there is a `null` value present, the function is a placeholder function and needs to be resolved to a concrete function. 
+A valid release of the crate on [crates.io](https://crates.io). If there is a `null` value present, the function is a placeholder function and needs to be resolved to a declared or generated function in another crate. 
 
 ##### `"crate_name"`
-The name of the crate is used internally within the source code.
+The name of the crate used within the source code.
 
 ##### `"relative_def_id"`
 A relative or logical path leading to either a declared/generated function or macro. The `relative_def_id` can be used to query information in the `type_hierarchy.json` file.
 
 ##### `"is_externally_visible"`
-Indicate whether the function is visible outside its package and can accept a cross-package call.
+The visability of the item. If `true`, the item is visible outside of its crate.
 
 ##### `"num_lines`
-LOC of a function or macro
+LOC of a function or macro.
 
 ##### `"source_location`
 Absolute path to the declared function or macro in the source code if available. 
-*NB:* The source path contains a path used during compilation and is not harmonized.
+
+*NB: The source path contains a path used during compilation and is not harmonized.*
 
 ### CG Node - Example 
 We use the [`wayland-client v0.25.0`](https://lima.ewi.tudelft.nl/cratesio/wayland-client/0.25.0/callgraph.json) call graph to exemplify the three types of functions or macros present in call graphs:
 
-**Internal**
+**Internal (a function with complete package qualifiers)**
 
 ``` json
 {
@@ -131,8 +132,8 @@ We use the [`wayland-client v0.25.0`](https://lima.ewi.tudelft.nl/cratesio/wayla
 }
 ```
 
-### CG Node - Steps to replace a placeholder function with a concrete function.
-We will reuse the placeholder example to illustrate the process:
+### CG Node - Steps to replace a placeholder function/macro with a function/macro from another crate.
+We will reuse the placeholder example above to illustrate the process:
 
 ``` json
 {
@@ -186,16 +187,16 @@ A CG edge is a list adhering the following format:
 An edge in `funcion_calls` has an additional list element. This extra element is to mark if an edge is dynamically or statically dispatched call. 
 
 ##### `"src_id"`
-the `id` of the caller function
+the `id` of the caller function.
 
 ##### `"dst_id"`
-the `id` of the callee function
+the `id` of the callee function.
 
 ##### `Bool(1)`
-If an edge is statically or dynamically dispatched. If `true`, a statically dispatched function. If `false`, dynamically dispatched function.
+If an edge is statically or dynamically dispatched. If `true`, a statically dispatched call. If `false`, dynamically dispatched call.
 
 ##### `Bool(2)`
-If an edge is resolved or unresolved. If `false`, the edge is unresolved and either the item in the `src_id` or `dst_id` needs to be replaced or linked to a function in another package. 
+If an edge is resolved or unresolved. If `false`, the edge is unresolved and either the item in the `src_id` or `dst_id` needs to be replaced or linked to a function/macro in another crate. 
 
 
 ### The `type_hierarchy.json` file
@@ -214,7 +215,7 @@ File containing information on structs, traits, and trait implementations of a c
 
 ##### `"types": []`
 A list of data types. A type is:
-  - Custom types (i.e., [`Struct`](https://doc.rust-lang.org/rust-by-example/custom_types/structs.html))
+  - Custom type (i.e., [`Struct`](https://doc.rust-lang.org/rust-by-example/custom_types/structs.html))
   - [Primitives](https://doc.rust-lang.org/rust-by-example/primitives.html)
   - Generics 
 
@@ -225,7 +226,7 @@ A list of [Traits](https://doc.rust-lang.org/rust-by-example/trait.html).
 A list of Trait Implementations.
 
 ### Data Type - Format
-A data type can be a custom type, primitive, or generic and are specified using the following format:
+A data type can be a custom type, primitive, or generic, and are specified using the following format:
 
 ``` json
 {
@@ -243,15 +244,15 @@ A unique identifier of the item within the file.
 Simple name of the type without relative path information.
 
 ##### `"package_name"`
-A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
+Name of the crate on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
 
 ##### `"package_version"`
-A valid release on [crates.io](https://crates.io). If there is a `null` value present, the custom type information needs to be replaced by one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
+A valid release of the crate on [crates.io](https://crates.io). If there is a `null` value present, the custom type information needs to be replaced by one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
 
 ##### `"relative_def_id"`
-A relative or logical path leading to declared `Struct`. If there is a `null` value, it is not a custom type but a primitive or generic type. 
+A relative or logical path leading to declared `Struct`. If there is a `null` value, it is a primitive or generic type. 
 
-### Data Type - Lookup up a type using a relative_def_id from a CG Node.
+### Data Type - Lookup up a type using a `relative_def_id` from a CG Node.
 
 In the [wayland-client v0.25.0](https://lima.ewi.tudelft.nl/cratesio/wayland-client/0.25.0/callgraph.json) callgraph, we have the following function we would like to look up the type information for:
 
@@ -302,7 +303,7 @@ The `string_id` indicates the name as `dyn Dispatcher`.
 A unique identifier of the item within the file. 
 
 ##### `"package_name"`
-A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
+Name of the crate on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
 
 ##### `"package_version"`
 A valid release on [crates.io](https://crates.io). If there is a `null` value present, the trait needs to be replaced by one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
@@ -333,7 +334,7 @@ A unique identifier of the item within the file.
 `id` reference to the type in `traits: []`. 
 
 ##### `"package_name"`
-A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
+Name of the crate on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
 
 ##### `"package_version"`
 A valid release on [crates.io](https://crates.io). If there is a `null` value present, the trait needs to be replaced by one from a resolved version. Follow the steps [here](README.md#cg-node---steps-to-replace-a-placeholder-function-with-a-concrete-function)
@@ -357,8 +358,7 @@ A relative or logical path leading to declared `Trait`.
   "source_location": "src/map.rs:69:5: 72:6"
 }
 ```
-2. Split the the `relative_def_id` at the right-most `{{impl}}` portion. 
-Sometimes there are several `{{impl}}` in one `relative_def_id`, you have to split at the right-most one and use left split to query in `impls`. For example:
+2. Split the the `relative_def_id` at the `{{impl}}` portion. Example:
 
 `wayland_commons::map[0]::{{impl}}[1]::is_interface[0] --> wayland_commons::map[0]::{{impl}}[1]` 
 
@@ -375,9 +375,9 @@ Sometimes there are several `{{impl}}` in one `relative_def_id`, you have to spl
 }
 ```
 
-Here, we find that the `trait_id` is `null`. In other cases, the `type_id` can also be `null`. Due to type generics, we are unable to resolve information correctly.
+Here, we find that the `trait_id` is `null`. In other cases, the `type_id` can also be `null`. Due to the use of generics, we are sometimes unable to resolve and piece out type information reliably. 
 
-4. From the retrieved item, we can lookup it's Struct and Trait. 
+4. From the retrieved item, we can lookup it's `Struct` and/or `Trait` if available. 
 
 Looking up the `type_id`, we find the name of this Struct is [`Object`](https://docs.rs/wayland-commons/0.23.4/wayland_commons/map/struct.Object.html).
 
