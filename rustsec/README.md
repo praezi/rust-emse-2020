@@ -131,7 +131,48 @@ We use the [`wayland-client v0.25.0`](https://lima.ewi.tudelft.nl/cratesio/wayla
 }
 ```
 
-### CG Node - Steps to replace a place holder function with a concrete function.
+### CG Node - Steps to replace a placeholder function with a concrete function.
+We will reuse the placeholder example to illustrate the process:
+
+``` json
+{
+  "id": 653,
+  "package_name": "wayland-commons",
+  "package_version": null,
+  "crate_name": "wayland_commons",
+  "relative_def_id": "wayland_commons::map[0]::{{impl}}[1]::is_interface[0]",
+  "is_externally_visible": true,
+  "num_lines": 4,
+  "source_location": "/opt/rustwide/cargo-home/registry/src/github.com-1ecc6299db9ec823/wayland-commons-0.25.0/src/map.rs:70:5: 73:6"
+}
+```
+
+1. Look-up the resolved version in the `Cargo.lock` file of the crate under analysis. Example: the resolved version is `0.23.4`
+2. Download the call graph of the crate and the resolved version. Example: [`wayland-commons v0.23.4`](https://lima.ewi.tudelft.nl/cratesio/wayland-commons/0.23.4/callgraph.json)
+3. Extract the `relative_def_id` of the placeholder function and lookup a matching function or macro in the downloaded call graph. Example:
+
+``` json
+{
+  "id": 22,
+  "package_name": "wayland-commons",
+  "package_version": "0.23.4",
+  "crate_name": "wayland_commons",
+  "relative_def_id": "wayland_commons::map[0]::{{impl}}[1]::is_interface[0]",
+  "is_externally_visible": true,
+  "num_lines": 4,
+  "source_location": "src/map.rs:69:5: 72:6"
+}
+```
+4. Verify that the `is_externally_visible` is still `true`.
+
+
+**Q: What if there are more matches for `relative_def_id`?**
+
+There are two possibilties. Due to the non-normalization of `source_location`, it is possible that we have duplicates of the same function or macro. You can verify this by comparing the `source_location` between the matches. In the other case, there are several anonymous functions with identical relative paths. They can be distingushed by comparing the `source_location` field. 
+
+### CG Edge
+
+
 
 
 
