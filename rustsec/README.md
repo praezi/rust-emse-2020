@@ -171,11 +171,31 @@ We will reuse the placeholder example to illustrate the process:
 There are two possibilties. Due to the non-normalization of `source_location`, it is possible that we have duplicates of the same function or macro. You can verify this by comparing the `source_location` between the matches. In the other case, there are several anonymous functions with identical relative paths. They can be distingushed by comparing the `source_location` field. 
 
 ### CG Edge
+A CG edge is a list adhering the following format:
 
+``` json
+"function_calls": [
+  ["src_id", "dst_id", Bool(1), Bool(2)]
+],
 
+"macro_calls": [
+  ["src_id", "dst_id", Bool(2)]
+]
+```
 
+An edge in `funcion_calls` has an additional list element. This extra element is to mark if an edge is dynamically or statically dispatched call. 
 
+##### `"src_id"`
+the `id` of the caller function
 
+##### `"dst_id"`
+the `id` of the callee function
+
+##### `Bool(1)`
+If an edge is statically or dynamically dispatched. If `true`, a statically dispatched function. If `false`, dynamically dispatched function.
+
+##### `Bool(2)`
+If an edge is resolved or unresolved. If `false`, the edge is unresolved and either the item in the `src_id` or `dst_id` needs to be replaced or linked to a function in another package. 
 
 
 
