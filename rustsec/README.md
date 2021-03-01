@@ -285,11 +285,31 @@ The `string_id` indicatas the name as `dyn Dispatcher`.
 
 **Q: Why could I not find type information from a `relative_def_id`?**
 
-- The function is part of a module and do not belong to a `Struct`.
+- The function is part of a module and do not belong to a particular `Struct`.
 - The function is an `unsafe` function that links to a function in a C library.
 - Missing information from the rust std crates (if you are trying look up something that belongs to `rustc`)
 
+### Trait - Format
 
+``` json
+{
+  "id": Int,
+  "package_name": String,
+  "package_version": String,
+  "relative_def_id": String
+}
+```
+##### `"id"`
+A unique identifier of the item within the file. We use the `id` to reference the source and target of function calls.
+
+##### `"package_name"`
+A crate's published name identifier on [crates.io](https://crates.io). If there is a `null` value, the type belongs to a standard crate of `rustc`.
+
+##### `"package_version"`
+A valid release on [crates.io](https://crates.io). If there is a `null` value present, the trait needs to be replaced by a one from a resolved version. Follow the steps [here]()
+
+##### `"relative_def_id"`
+A relative or logical path leading to declared `Trait`.
 
 
 
